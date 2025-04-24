@@ -50,7 +50,7 @@ export async function createUser(userid, password, name, email) {
     userid,
     password,
     name,
-    email, 
+    email,
     url: "https://randomuser.me/api/portraits/men/29.jpg",
   };
   users = [user, ...users];
@@ -64,3 +64,10 @@ export async function login(userid, password) {
   );
   return user;
 }
+
+// 로그인 함수 (과제)
+export const dummyUser = {
+  id: 1,
+  username: "user1",
+  password: "pass123",
+};
