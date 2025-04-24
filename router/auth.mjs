@@ -6,5 +6,5 @@ const router = express.Router();
 
 //로그인
 
-//로그인 유지지
+//로그인 유지
 export default router;
