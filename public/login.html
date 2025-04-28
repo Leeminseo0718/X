@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>로그인</title>
+</head>
+<body>
+  <h1>Login</h1>
+  <form id="loginForm">
+    <input type="text" id="userid" placeholder="아이디" required><br>
+    <input type="password" id="password" placeholder="비밀번호" required><br>
+    <button type="submit">로그인</button>
+  </form>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const userid = document.getElementById('userid').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!userid || !password) {
+        alert('아이디와 비밀번호를 입력해주세요.');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://127.0.0.1:8080/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userid, password })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert('로그인 성공! 환영합니다.');
+          console.log('받은 토큰:', result.token); // 필요하면 토큰 저장 가능
+        } else {
+          alert('로그인 실패: ' + result.message);
+        }
+      } catch (error) {
+        alert('에러 발생: ' + error.message);
+      }
+    });
+  </script>
+</body>
+</html>

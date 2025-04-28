@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { config } from "../config.mjs";
 
 const secretKey = config.jwt.secretKey;
-const bcrtptSaltRounds = config.bcrtpt.secretKey;
+const bcrtptSaltRounds = config.bcrypt.secretKey;
 const jwtExpiresInDays = config.jwt.expiresInSec;
 
 export async function signup(req, res, next) {
