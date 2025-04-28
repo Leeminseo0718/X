@@ -1,4 +1,11 @@
 import * as authRepository from "../data/auth.mjs";
+import * as bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { config } from "../config.mjs";
+
+const secretKey = config.jwt.secretKey;
+const bcrtptSaltRounds = config.bcrtpt.secretKey;
+const jwtExpiresInDays = config.jwt.expiresInSec;
 
 export async function signup(req, res, next) {
   const { userid, password, name, email } = req.body;
