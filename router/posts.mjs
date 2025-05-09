@@ -1,35 +1,38 @@
 import express from "express";
-import * as postController from "../controller/post.mjs";
+import * as authController from "../controller/auth.mjs";
+import { body } from "express-validator";
+import { validate } from "../middleware/validator.mjs";
 
 const router = express.Router();
 
-// 모든 포스트 가져오기
-// 해당 아이디에 대한 포스트 가져오기
-// GET
-// http://127.0.0.1:8080/posts/
-// http://127.0.0.1:8080/posts?userid=apple
-router.get("/", postController.getPosts);
+const validateLogin = [
+  body("userid")
+    .trim()
+    .isLength({ min: 4 })
+    .withMessage("최소 4자이상 입력")
+    .matches(/^[a-zA-Z0-9]*$/)
+    .withMessage("특수문자는 사용불가"),
+  body("password").trim().isLength({ min: 8 }).withMessage("최소 8자이상 입력"),
+  validate,
+];
 
-// 글번호에 대한 포스트 가져오기
-// GET
-// http://127.0.0.1:8080/posts/:id
-router.get("/:id", postController.getPost);
+const validateSignup = [
+  ...validateLogin,
+  body("name").trim().notEmpty().withMessage("name을 입력"),
+  body("email").trim().isEmail().withMessage("이메일 형식 확인"),
+  validate,
+];
 
-// 포스트 쓰기
+// 회원가입
 // POST
-// http://127.0.0.1:8080/posts
-// json 형태로 입력 후 저장
-router.post("/", postController.createPost);
+// http://127.0.0.1:8080/auth/signup
+router.post("/signup", validateSignup, authController.signup);
 
-// 포스트 수정하기
-// PUT
-// http://127.0.0.1:8080/posts/:id
-// json 형태로 입력 후 저장
-router.put("/:id", postController.updatePost);
+// 로그인
+// POST
+// http://127.0.0.1:8080/auth/login
+router.post("/login", validateLogin, authController.login);
 
-// 포스트 삭제하기
-// DELETE
-// http://127.0.0.1:8080/posts/:id
-router.delete("/:id", postController.deletePost);
+// 로그인 유지
 
 export default router;
