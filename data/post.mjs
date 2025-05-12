@@ -1,4 +1,8 @@
-import { db } from "../db/database.mjs";
+import { getPosts } from "../db/database.mjs";
+import MongoDb, { ReturnDocument } from "mongodb";
+import * as UserRepository from "./auth.mjs";
+import { getPost } from "../controller/post.mjs";
+const ObjectID = MongoDb.ObjectId;
 
 const SELECT_JOIN =
   "select u.userid, u.name, u.url, p.idx, p.useridx, p.text, p.createAt from users as u join posts as p on u.idx = p.useridx";
@@ -6,40 +10,59 @@ const ORDER_DESC = "order by p.createAt desc";
 
 // 모든 포스트를 리턴
 export async function getAll() {
-  return db.execute(`${SELECT_JOIN} ${ORDER_DESC}`).then((result) => result[0]);
+  return getPosts().find().sort({ createAt: -1 }).toArray();
 }
 
 // 사용자 아이디(userid)에 대한 포스트를 리턴
 // 조건을 만족하는 모든 요소를 배열로 리턴
 export async function getAllByUserid(userid) {
-  return db
-    .execute(`${SELECT_JOIN} where u.userid=? ${ORDER_DESC}`, [userid])
-    .then((result) => result[0]);
+  return getPosts().find({ userid }).sort({ createAt: -1 }).toArray();
 }
 
 // 글 번호(id)에 대한 포스트를 리턴
 // 조건을 만족하는 첫 번째 요소 하나를 리턴
-export async function getById(idx) {
-  return db
-    .execute(`${SELECT_JOIN} where p.idx=?`, [idx])
-    .then((result) => result[0][0]);
+export async function getById(id) {
+  return getPosts()
+    .find({ _id: new ObjectID(id) })
+    .next()
+    .then(mapOptionalPost);
 }
 
 // 포스트 작성
-export async function create(text, useridx) {
-  return db
-    .execute("insert into posts (useridx, text) values (?, ?)", [useridx, text])
-    .then((result) => getById(result[0].insertId));
+export async function create(text, id) {
+  console.log("id: ", id);
+  return UserRepository.findByid(id)
+    .then((user) =>
+      getPosts().insertOne({
+        text,
+        createAt: new Date(),
+        useridx: user.id,
+        name: user.name,
+        userid: user.userid,
+        url: user.url,
+      })
+    )
+    .then((result) => {
+      return getPosts().findOne({ _id: result.insertedId });
+    });
 }
 
 // 포스트 변경
-export async function update(idx, text) {
-  return db
-    .execute("update posts set text=? where idx=?", [text, idx])
-    .then(() => getById(idx));
+export async function update(id, text) {
+  return getPosts()
+    .findOneAndUpdate(
+      { _id: new ObjectID(id) },
+      { $set: { text } },
+      { ReturnDocument: "after" }
+    )
+    .then((result) => result);
 }
 
 // 포스트 삭제
-export async function remove(idx) {
-  return db.execute("delete from posts where idx=?", [idx]);
+export async function remove(id) {
+  return getPosts().deleteOne({ _id: new ObjectID(id) });
+}
+
+function mapOptionalPost(post) {
+  return post ? { ...post, id: post._id.toString() } : post;
 }

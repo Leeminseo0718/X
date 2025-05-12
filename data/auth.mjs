@@ -1,13 +1,12 @@
-import { db } from "../db/database.mjs";
+// import { db } from "../db/database.mjs";
+import MongoDB from "mongodb";
+import { getUsers } from "../db/database.mjs";
+const ObjectID = MongoDB.ObjectId;
 
 export async function createUser(user) {
-  const { userid, password, name, email, url } = user;
-  return db
-    .execute(
-      "insert into users (userid, password, name, email, url) values (?, ?, ?, ?, ?)",
-      [userid, password, name, email, url]
-    )
-    .then((result) => result[0].insertId);
+  return getUsers()
+    .insertOne(user)
+    .then((result) => result.insertedId.toString());
 }
 
 export async function login(userid, password) {
@@ -18,13 +17,16 @@ export async function login(userid, password) {
 }
 
 export async function findByUserid(userid) {
-  return db
-    .execute("select * from users where userid=?", [userid])
-    .then((result) => result[0][0]);
+  return getUsers().find({ userid }).next().then(mapOptionalUser);
 }
 
-export async function findByid(idx) {
-  return db
-    .execute("select * from users where idx=?", [idx])
-    .then((result) => result[0][0]);
+export async function findByid(id) {
+  return getUsers()
+    .find({ _id: new ObjectID(id) })
+    .next()
+    .then(mapOptionalUser);
+}
+
+function mapOptionalUser(user) {
+  return user ? { ...user, id: user._id.toString() } : user;
 }
